@@ -9,9 +9,7 @@ import java.awt.image.BufferedImage;
 /**
  * Floyd/Steinberg dithering
  * @author Dan
- * @see
- * <a href="http://en.literateprograms.org/Floyd-Steinberg_dithering_%28C%29">http://en.literateprograms.org/Floyd-Steinberg_dithering_%28C%29</a>
- * <a href="http://www.home.unix-ag.org/simon/gimp/fsdither.c">http://www.home.unix-ag.org/simon/gimp/fsdither.c</a>
+ * @see <a href="http://en.literateprograms.org/Floyd-Steinberg_dithering_%28C%29">http://en.literateprograms.org/Floyd-Steinberg_dithering_%28C%29</a> and <a href="http://www.home.unix-ag.org/simon/gimp/fsdither.c">http://www.home.unix-ag.org/simon/gimp/fsdither.c</a>
  */
 public class Filter_DitherFloydSteinberg extends Filter {
 	private long tone;
@@ -20,17 +18,16 @@ public class Filter_DitherFloydSteinberg extends Filter {
 	public Filter_DitherFloydSteinberg(MainGUI gui, MachineConfiguration mc,
 			MultilingualSupport ms) {
 		super(gui, mc, ms);
-		// TODO Auto-generated constructor stub
 	}
 
 	
-	private int QuantizeColor(int original) {
+	private int quantizeColor(int original) {
 		int i=(int)Math.min(Math.max(original, 0),255);
 		return ( i > tone ) ? 255 : 0;
 	}
 	
 	
-	private void DitherDirection(BufferedImage img,int y,int[] error,int[] nexterror,int direction) {
+	private void ditherDirection(BufferedImage img,int y,int[] error,int[] nexterror,int direction) {
 		int w = img.getWidth();
 		int oldPixel, newPixel, quant_error;
 		int start, end, x;
@@ -50,7 +47,7 @@ public class Filter_DitherFloydSteinberg extends Filter {
 			// oldpixel := pixel[x][y]
 			oldPixel = decode(img.getRGB(x, y)) + error[x];
 			// newpixel := find_closest_palette_color(oldpixel)
-			newPixel = QuantizeColor(oldPixel);
+			newPixel = quantizeColor(oldPixel);
 			// pixel[x][y] := newpixel
 			img.setRGB(x, y, encode(newPixel));
 			// quant_error := oldpixel - newpixel
@@ -70,8 +67,8 @@ public class Filter_DitherFloydSteinberg extends Filter {
 		}
 	}
 	
-	
-	public BufferedImage Process(BufferedImage img) {
+	@Override
+	public BufferedImage process(BufferedImage img) {
 		int y,x;
 		int h = img.getHeight();
 		int w = img.getWidth();
@@ -86,7 +83,7 @@ public class Filter_DitherFloydSteinberg extends Filter {
 		// find the average color of the system
 		for(y=0;y<h;++y) {
 			for(x=0;x<w;++x) {
-				tone+=decode(img.getRGB(x,y));
+				tone += decode(img.getRGB(x,y));
 			}
 		}
 		
@@ -95,7 +92,7 @@ public class Filter_DitherFloydSteinberg extends Filter {
 		
 		// for each y from top to bottom
 		for(y=0;y<h;++y) {
-			DitherDirection(img,y,error,nexterror,direction);
+			ditherDirection(img,y,error,nexterror,direction);
 			
 			direction = direction> 0 ? -1 : 1;
 			int [] tmp = error;
@@ -122,5 +119,5 @@ public class Filter_DitherFloydSteinberg extends Filter {
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ * along with DrawbotGUI.  If not, see <http://www.gnu.org/licenses/>.
  */

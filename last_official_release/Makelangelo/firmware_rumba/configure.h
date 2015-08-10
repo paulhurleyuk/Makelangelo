@@ -25,23 +25,23 @@
 // servo angles for pen control
 #define PEN_UP_ANGLE         (80)
 #define PEN_DOWN_ANGLE       (10)  // Some steppers don't like 0 degrees
-#define PEN_DELAY            (250)  // in ms
 
 // for serial comms
-#define BAUD                 (57600)  // How fast is the Arduino talking?
+#define BAUD                 (115200)  // How fast is the Arduino talking?
 #define MAX_BUF              (64)  // What is the longest message Arduino can store?
 
 
 #define MICROSTEPS           (16.0)  // microstepping on this microcontroller
 #define STEPS_PER_TURN       (400 * MICROSTEPS)  // default number of steps per turn * microsteps
-#define MAX_FEEDRATE         (40000.0)  // depends on timer interrupt & hardware
-#define MIN_FEEDRATE         (1500)
-#define DEFAULT_FEEDRATE     (7000.0)
-#define DEFAULT_ACCELERATION (8)
+
+#define MAX_FEEDRATE         (30000.0)  // depends on timer interrupt & hardware
+#define MIN_FEEDRATE         (1000)
+#define DEFAULT_FEEDRATE     (8500.0)
+#define DEFAULT_ACCELERATION (250)
 
 #define STEP_DELAY           (150)  // delay between steps, in microseconds, when doing fixed tasks like homing
 
-#define NUM_AXIES            (6)  // x,y,z
+#define NUM_AXIES            (3)  // x,y,z
 #define NUM_TOOLS            (6)
 #define MAX_SEGMENTS         (32)  // number of line segments to buffer ahead
 
@@ -90,13 +90,37 @@
 //#define MOTHERBOARD 2 // RAMPS
 
 #if MOTHERBOARD == 1
-#define MOTOR_0_DIR_PIN    (16)
-#define MOTOR_0_STEP_PIN   (17)
-#define MOTOR_0_ENABLE_PIN (48)
+#define MOTOR_0_DIR_PIN           (16)
+#define MOTOR_0_STEP_PIN          (17)
+#define MOTOR_0_ENABLE_PIN        (48)
+#define MOTOR_0_LIMIT_SWITCH_PIN  (37)
 
-#define MOTOR_1_DIR_PIN    (47)
-#define MOTOR_1_STEP_PIN   (54)
-#define MOTOR_1_ENABLE_PIN (55)
+#define MOTOR_1_DIR_PIN           (47)
+#define MOTOR_1_STEP_PIN          (54)
+#define MOTOR_1_ENABLE_PIN        (55)
+#define MOTOR_1_LIMIT_SWITCH_PIN  (36)
+
+// alternate pins in case you want to do something interesting
+#define MOTOR_2_DIR_PIN           (56)
+#define MOTOR_2_STEP_PIN          (57)
+#define MOTOR_2_ENABLE_PIN        (62)
+#define MOTOR_2_LIMIT_SWITCH_PIN  (35)
+
+#define MOTOR_3_DIR_PIN           (22)
+#define MOTOR_3_STEP_PIN          (23)
+#define MOTOR_3_ENABLE_PIN        (27)
+#define MOTOR_3_LIMIT_SWITCH_PIN  (34)
+
+#define MOTOR_4_DIR_PIN           (25)
+#define MOTOR_4_STEP_PIN          (26)
+#define MOTOR_4_ENABLE_PIN        (24)
+#define MOTOR_4_LIMIT_SWITCH_PIN  (33)
+
+#define MOTOR_5_DIR_PIN           (28)
+#define MOTOR_5_STEP_PIN          (29)
+#define MOTOR_5_ENABLE_PIN        (39)
+#define MOTOR_5_LIMIT_SWITCH_PIN  (32)
+
 #endif
 
 #if MOTHERBOARD == 2
@@ -119,7 +143,6 @@
 // for timer interrupt control
 #define CLOCK_FREQ            (16000000L)
 #define MAX_COUNTER           (65536L)
-#define TIMER_PRESCALER_COUNT (5)
 // time passed with no instruction?  Make sure PC knows we are waiting.
 #define TIMEOUT_OK            (1000)
 
@@ -163,10 +186,10 @@ typedef struct {
   int steps_taken;
   int accel_until;
   int decel_after;
-  float feed_rate_max;
-  float feed_rate_start;
-  float feed_rate_start_max;
-  float feed_rate_end;
+  unsigned short feed_rate_max;
+  unsigned short feed_rate_start;
+  unsigned short feed_rate_start_max;
+  unsigned short feed_rate_end;
   char nominal_length_flag;
   char recalculate_flag;
   char busy;

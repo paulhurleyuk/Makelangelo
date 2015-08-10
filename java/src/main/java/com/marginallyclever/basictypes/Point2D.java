@@ -1,19 +1,24 @@
-package com.marginallyclever.makelangelo;
+package com.marginallyclever.basictypes;
 
-public class Point3D {
-	public float x, y, z;
-	
-	public Point3D(float xx,float yy,float zz) {
-		set(xx,yy,zz);
+public class Point2D {
+	public float x, y;
+
+	public Point2D(Point2D p) {
+		set(p.x,p.y);
 	}
-	public Point3D(double xx,double yy,double zz) {
-		set((float)xx,(float)yy,(float)zz);
+	public Point2D() {
+		set(0,0);
+	}
+	public Point2D(float xx,float yy) {
+		set(xx,yy);
+	}
+	public Point2D(double xx,double yy) {
+		set((float)xx,(float)yy);
 	}
 	
-	public void set(float xx,float yy,float zz) {
+	public void set(float xx,float yy) {
 		x=xx;
 		y=yy;
-		z=zz;
 	}
 }
 
@@ -31,5 +36,5 @@ public class Point3D {
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ * along with DrawbotGUI.  If not, see <http://www.gnu.org/licenses/>.
  */

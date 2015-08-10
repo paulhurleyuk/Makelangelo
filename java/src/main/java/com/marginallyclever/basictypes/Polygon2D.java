@@ -1,4 +1,4 @@
-package com.marginallyclever.makelangelo;
+package com.marginallyclever.basictypes;
 
 public class Polygon2D {
 	public Point2D [] list;
@@ -9,9 +9,7 @@ public class Polygon2D {
 		} else {
 			Point2D [] new_list = new Point2D[list.length+1];
 
-			for(int i=0;i<list.length;++i) {
-				new_list[i] = list[i];
-			}
+			System.arraycopy(list, 0, new_list, 0, list.length);
 			
 			list = new_list;
 		}

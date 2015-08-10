@@ -5,12 +5,12 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
@@ -26,16 +26,24 @@ import com.marginallyclever.drawingtools.DrawingTool;
 import com.marginallyclever.drawingtools.DrawingTool_LED;
 import com.marginallyclever.drawingtools.DrawingTool_Pen;
 import com.marginallyclever.drawingtools.DrawingTool_Spraypaint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-
-public class MachineConfiguration {
-	private Preferences prefs = Preferences.userRoot().node("DrawBot");
+/**
+ * @author dan royer
+ */
+public final class MachineConfiguration {
+	/**
+	 * 
+	 */
+	private final Preferences topLevelMachinesPreferenceNode = PreferencesHelper.getPreferenceNode(PreferencesHelper.MakelangeloPreferenceKey.MACHINES);
 	
-	static final String CURRENT_VERSION = "1";
-	// GUID
-	protected long robot_uid=0;
+	/**
+	 * Each robot has a global unique identifier
+	 */
+	private long robot_uid = 0;
 	
-	protected double INCH_TO_CM = 2.54;
+	protected final static double INCH_TO_CM = 2.54;
 	
 	// machine physical limits
 	public double limit_top=18*INCH_TO_CM;
@@ -48,7 +56,7 @@ public class MachineConfiguration {
 	public double paper_bottom=-12*INCH_TO_CM;
 	public double paper_left=-9*INCH_TO_CM;
 	public double paper_right=9*INCH_TO_CM;
-	public double paper_margin=0.9;
+	public double paperMargin=0.9;
 	
 	// pulleys turning backwards?
 	public boolean m1invert=false;
@@ -58,58 +66,68 @@ public class MachineConfiguration {
 	private double bobbin_left_diameter=1.5;
 	private double bobbin_right_diameter=1.5;
 
-	private double max_feed_rate=3500;  // etch-a-sketch speed
+	private double max_feed_rate=11000;  // etch-a-sketch speed
 	
 	public boolean reverseForGlass=false;
 	public boolean motors_backwards=false;
-	protected int current_style;
 
-
+/*
 	// top left, bottom center, etc...
-	private int startingPositionIndex;
+	private String[] startingStrings = { 
+			"Top Left", 
+			"Top Center",
+			"Top Right", 
+			"Left", 
+			"Center", 
+			"Right", 
+			"Bottom Left",
+			"Bottom Center",
+			"Bottom Right" };*/
+	private int startingPositionIndex=4;
 	
 	// TODO a way for users to create different tools for each machine 
-	protected DrawingTool tools[];
+	protected List<DrawingTool> tools;
 	protected int current_tool=0;	
 	
-	protected String [] configurations_available = null;
+	protected String [] machineConfigurationsAvailable = null;
 	private MainGUI mainGUI = null;
 	private MultilingualSupport translator;
-	
-	
-	// constructor
+
+    private final Logger logger = LoggerFactory.getLogger(MachineConfiguration.class);
+
+    /**
+	 * TODO move tool names into translations & add a color palette system for quantizing colors
+	 * @param gui
+	 * @param ms
+	 */
 	protected MachineConfiguration(MainGUI gui,MultilingualSupport ms) {
 		mainGUI = gui;
 		translator = ms;
 		
-		tools = new DrawingTool[6];
-		int i=0;
-		tools[i++]=new DrawingTool_Pen("Pen (black)",0,gui,ms,this);
-		tools[i++]=new DrawingTool_Pen("Pen (red)",1,gui,ms,this);
-		tools[i++]=new DrawingTool_Pen("Pen (green)",2,gui,ms,this);
-		tools[i++]=new DrawingTool_Pen("Pen (blue)",3,gui,ms,this);
-		tools[i++]=new DrawingTool_LED(gui,ms,this);
-		tools[i++]=new DrawingTool_Spraypaint(gui,ms,this);
-		
-		VersionCheck();
+		tools = new ArrayList<>();
+		tools.add(new DrawingTool_Pen("Pen (black)",0,gui,ms,this));
+		tools.add(new DrawingTool_Pen("Pen (red)",1,gui,ms,this));
+		tools.add(new DrawingTool_Pen("Pen (green)",2,gui,ms,this));
+		tools.add(new DrawingTool_Pen("Pen (blue)",3,gui,ms,this));
+		tools.add(new DrawingTool_LED(gui,ms,this));
+		tools.add(new DrawingTool_Spraypaint(gui,ms,this));
 		
 		// which configurations are available?
 		try {
-			configurations_available = prefs.node("Machines").childrenNames();
+			machineConfigurationsAvailable = topLevelMachinesPreferenceNode.childrenNames();
+		} catch(Exception e) {
+            logger.error("{}", e);
+			machineConfigurationsAvailable = new String[1];
 		}
-		catch(Exception e) {
-			configurations_available = new String[0];
-		}
-		
 		// TODO load most recent config?
-		LoadConfig(0);
+		loadConfig(0);
 	}
 	
 	/**
 	* Open the config dialog, send the config update to the robot, save it for future, and refresh the preview tab.
 	*/
-	public void AdjustMachineSize() {
-		final JDialog driver = new JDialog(mainGUI.getParentFrame(),"Adjust machine & paper size",true);
+	public void adjustMachineSize() {
+		final JDialog driver = new JDialog(mainGUI.getParentFrame(),translator.get("MenuSettingsMachine"),true);
 		driver.setLayout(new GridBagLayout());
 		
 		final JTextField mw = new JTextField(String.valueOf((limit_right-limit_left)*10));
@@ -119,36 +137,37 @@ public class MachineConfiguration {
 		final JCheckBox m1i = new JCheckBox(translator.get("Invert"),this.m1invert);
 		final JCheckBox m2i = new JCheckBox(translator.get("Invert"),this.m2invert);
 
-		//String[] startingStrings = { "Top Left", "Top Center", "Top Right", "Left", "Center", "Right", "Bottom Left","Bottom Center","Bottom Right" };
 		//final JComboBox<String> startPos = new JComboBox<String>(startingStrings);
 		//startPos.setSelectedIndex(startingPositionIndex);
 		
 		final JButton cancel = new JButton(translator.get("Cancel"));
 		final JButton save = new JButton(translator.get("Save"));
+
+		JLabel picLabel = null;
+		BufferedImage myPicture = null;
 		
 		String limit_file = "limits.png";
-		
-		BufferedImage myPicture = null;
 		try {
 			InputStream s = MainGUI.class.getResourceAsStream("/"+limit_file);
 			myPicture = ImageIO.read(s);
 		}
 		catch(IOException e) {
 			e.printStackTrace();
-			
 		}
-		if (myPicture == null) {System.err.println(translator.get("CouldNotFind")+limit_file); return;}
-		
-		JLabel picLabel = new JLabel(new ImageIcon( myPicture ));
-		
+		if (myPicture != null) {
+			picLabel = new JLabel(new ImageIcon( myPicture ));
+		}
+
 		GridBagConstraints c = new GridBagConstraints();
 		GridBagConstraints d = new GridBagConstraints();
 		
 		int y=0;
 		
-		c.weightx=0.25;
-		c.gridx=0; c.gridy=y; c.gridwidth=4; c.gridheight=4; c.anchor=GridBagConstraints.CENTER; driver.add( picLabel,c );
-		y+=5;
+		if (myPicture != null) {
+			c.weightx=0.25;
+			c.gridx=0; c.gridy=y; c.gridwidth=4; c.gridheight=4; c.anchor=GridBagConstraints.CENTER; driver.add( picLabel,c );
+			y+=5;
+		}
 		
 		c.gridheight=1; c.gridwidth=1; 
 		c.gridx=0; c.gridy=y; c.gridwidth=4; c.gridheight=1;
@@ -250,6 +269,7 @@ public class MachineConfiguration {
 							break;
 						}
 						*/
+						startingPositionIndex=4;
 						// relative to paper limits
 						switch(startingPositionIndex%3) {
 						case 0:
@@ -295,8 +315,8 @@ public class MachineConfiguration {
 						m1invert = m1i.isSelected();
 						m2invert = m2i.isSelected();
 						
-						SaveConfig();
-						mainGUI.SendConfig();
+						saveConfig();
+						mainGUI.sendConfig();
 						driver.dispose();
 					}
 				}
@@ -316,16 +336,21 @@ public class MachineConfiguration {
 	
 
 	public String [] getToolNames() {
-		String[] toolNames = new String[tools.length];
-		for(int i=0;i<tools.length;++i) {
-			toolNames[i] = tools[i].GetName();
+		String[] toolNames = new String[tools.size()];
+		Iterator<DrawingTool> i = tools.iterator();
+		int c=0;
+		while(i.hasNext()) {
+			DrawingTool t = i.next();
+			toolNames[c++] = t.getName();
 		}
 		return toolNames;
 	}
 	
 	
-	// dialog to adjust the pen up & pen down values
-	protected void ChangeTool() {
+	/**
+	 * dialog to adjust the pen up & pen down values
+	 */
+	protected void changeTool() {
 		final JDialog driver = new JDialog(mainGUI.getParentFrame(),translator.get("AdjustMachineSize"),true);
 		driver.setLayout(new GridBagLayout());
 		
@@ -355,8 +380,8 @@ public class MachineConfiguration {
 				if(subject == save) {
 					current_tool = toolCombo.getSelectedIndex();
 					
-					SaveConfig();
-					mainGUI.SendConfig();
+					saveConfig();
+					mainGUI.sendConfig();
 					driver.dispose();
 				}
 				if(subject == cancel) {
@@ -374,23 +399,25 @@ public class MachineConfiguration {
 	
 	
 	// dialog to adjust the pen up & pen down values
-	protected void AdjustTool() {
-		GetCurrentTool().Adjust();
+	protected void adjustTool() {
+		getCurrentTool().adjust();
 	}
 	
 
-	public DrawingTool GetTool(int tool_id) {
-		return tools[tool_id];
+	public DrawingTool getTool(int tool_id) {
+		return tools.get(tool_id);
 	}
 	
 	
-	public DrawingTool GetCurrentTool() {
-		return GetTool(current_tool);
+	public DrawingTool getCurrentTool() {
+		return getTool(current_tool);
 	}
 	
 	
-	// Open the config dialog, send the config update to the robot, save it for future, and refresh the preview tab.
-	public void AdjustPulleySize() {
+	/**
+	 * Open the config dialog, send the config update to the robot, save it for future, and refresh the preview tab.
+	 */
+	public void adjustPulleySize() {
 		final JDialog driver = new JDialog(mainGUI.getParentFrame(),translator.get("AdjustPulleySize"),true);
 		driver.setLayout(new GridBagLayout());
 
@@ -427,8 +454,8 @@ public class MachineConfiguration {
 						if( bobbin_left_diameter <= 0 ) data_is_sane=false;
 						if( bobbin_right_diameter <= 0 ) data_is_sane=false;
 						if(data_is_sane ) {
-							SaveConfig();
-							mainGUI.SendConfig();
+							saveConfig();
+							mainGUI.sendConfig();
 							driver.dispose();
 						}
 					}
@@ -445,139 +472,131 @@ public class MachineConfiguration {
 		driver.pack();
 		driver.setVisible(true);
 	}
-
-	
-	protected void VersionCheck() {
-		String version = prefs.get("version", CURRENT_VERSION);
-		if( version.equals(CURRENT_VERSION) == false ) {
-			prefs.put("version", CURRENT_VERSION);
-		}
-	}
 	
 	
-	// Load the machine configuration
-	protected void LoadConfig(long uid) {
+	/**
+	 * Load the machine configuration
+	 * @param uid the unique id of the robot to be loaded
+	 */
+	protected void loadConfig(long uid) {
 		robot_uid = uid;
-		
-		if( GetCanUseCloud() && LoadConfigFromCloud() ) return;
-		LoadConfigFromLocal();
+		// once cloud logic is finished.
+		//if( GetCanUseCloud() && LoadConfigFromCloud() ) return;
+		loadConfigFromLocal();
 	}
 	
-	
-	protected boolean LoadConfigFromCloud() {
-		// Ask for credentials: MC login, password.  auto-remember login name.
-		//String login = new String();
-		//String password = new String();
-		// TODO finish this section
+	protected void loadConfigFromLocal() {
+		final Preferences uniqueMachinePreferencesNode = topLevelMachinesPreferenceNode.node(Long.toString(robot_uid));
+		limit_top = Double.valueOf(uniqueMachinePreferencesNode.get("limit_top", Double.toString(limit_top)));
+		limit_bottom = Double.valueOf(uniqueMachinePreferencesNode.get("limit_bottom", Double.toString(limit_bottom)));
+		limit_left = Double.valueOf(uniqueMachinePreferencesNode.get("limit_left", Double.toString(limit_left)));
+		limit_right = Double.valueOf(uniqueMachinePreferencesNode.get("limit_right", Double.toString(limit_right)));
+		m1invert=Boolean.parseBoolean(uniqueMachinePreferencesNode.get("m1invert", m1invert?"true":"false"));
+		m2invert=Boolean.parseBoolean(uniqueMachinePreferencesNode.get("m2invert", m2invert?"true":"false"));
+		bobbin_left_diameter=Double.valueOf(uniqueMachinePreferencesNode.get("bobbin_left_diameter", Double.toString(bobbin_left_diameter)));
+		bobbin_right_diameter=Double.valueOf(uniqueMachinePreferencesNode.get("bobbin_right_diameter", Double.toString(bobbin_right_diameter)));
+		max_feed_rate=Double.valueOf(uniqueMachinePreferencesNode.get("feed_rate",Double.toString(max_feed_rate)));
+		startingPositionIndex=Integer.valueOf(uniqueMachinePreferencesNode.get("startingPosIndex",Integer.toString(startingPositionIndex)));
 
-		/*
-		try {
-		    // Send query
-			URL url = new URL("https://marginallyclever.com/drawbot_getmachineconfig.php?name="+login+"pass="+password+"&id="+robot_uid);
-		    URLConnection conn = url.openConnection();
-		    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-		    // read data
-			// TODO finish this section
-    
-		    // close connection
-		    rd.close();
-		} catch (Exception e) {}
-		*/
-		return false;
-	}
-	
-	
-	protected void LoadConfigFromLocal() {
-		Preferences prefs2 = prefs.node("Machines").node(Long.toString(robot_uid));
-		limit_top = Double.valueOf(prefs2.get("limit_top", Double.toString(limit_top)));
-		limit_bottom = Double.valueOf(prefs2.get("limit_bottom", Double.toString(limit_bottom)));
-		limit_left = Double.valueOf(prefs2.get("limit_left", Double.toString(limit_left)));
-		limit_right = Double.valueOf(prefs2.get("limit_right", Double.toString(limit_right)));
-		m1invert=Boolean.parseBoolean(prefs2.get("m1invert", m1invert?"true":"false"));
-		m2invert=Boolean.parseBoolean(prefs2.get("m2invert", m2invert?"true":"false"));
-		bobbin_left_diameter=Double.valueOf(prefs2.get("bobbin_left_diameter", Double.toString(bobbin_left_diameter)));
-		bobbin_right_diameter=Double.valueOf(prefs2.get("bobbin_right_diameter", Double.toString(bobbin_right_diameter)));
-		max_feed_rate=Double.valueOf(prefs2.get("feed_rate",Double.toString(max_feed_rate)));
-		startingPositionIndex=Integer.valueOf(prefs2.get("startingPosIndex",Integer.toString(startingPositionIndex)));
-
-		paper_left=Double.parseDouble(prefs2.get("paper_left",Double.toString(paper_left)));
-		paper_right=Double.parseDouble(prefs2.get("paper_right",Double.toString(paper_right)));
-		paper_top=Double.parseDouble(prefs2.get("paper_top",Double.toString(paper_top)));
-		paper_bottom=Double.parseDouble(prefs2.get("paper_bottom",Double.toString(paper_bottom)));
+		paper_left=Double.parseDouble(uniqueMachinePreferencesNode.get("paper_left",Double.toString(paper_left)));
+		paper_right=Double.parseDouble(uniqueMachinePreferencesNode.get("paper_right",Double.toString(paper_right)));
+		paper_top=Double.parseDouble(uniqueMachinePreferencesNode.get("paper_top",Double.toString(paper_top)));
+		paper_bottom=Double.parseDouble(uniqueMachinePreferencesNode.get("paper_bottom",Double.toString(paper_bottom)));
 		
 		// load each tool's settings
-		for(int i=0;i<tools.length;++i) {
-			tools[i].LoadConfig(prefs2);
+		for (DrawingTool tool : tools) {
+			tool.loadConfig(uniqueMachinePreferencesNode);
 		}
 
-		// TODO move these values to image filter preferences
-		paper_margin = Double.valueOf(prefs2.get("paper_margin",Double.toString(paper_margin)));
-		reverseForGlass = Boolean.parseBoolean(prefs2.get("reverseForGlass",reverseForGlass?"true":"false"));
-		current_tool = Integer.valueOf(prefs2.get("current_tool",Integer.toString(current_tool)));
+		paperMargin = Double.valueOf(uniqueMachinePreferencesNode.get("paper_margin",Double.toString(paperMargin)));
+		reverseForGlass = Boolean.parseBoolean(uniqueMachinePreferencesNode.get("reverseForGlass",reverseForGlass?"true":"false"));
+		current_tool = Integer.valueOf(uniqueMachinePreferencesNode.get("current_tool",Integer.toString(current_tool)));
 	}
 
 	
 	// Save the machine configuration
-	public void SaveConfig() {
-		if(GetCanUseCloud() && SaveConfigToCloud() ) return;
-		SaveConfigToLocal();
+	public void saveConfig() {
+		// once cloud logic is finished.
+		//if(GetCanUseCloud() && SaveConfigToCloud() ) return;
+		saveConfigToLocal();
 	}
-	
-	
-	public boolean GetCanUseCloud() {
-		return prefs.getBoolean("can_use_cloud", false);
+
+	/*
+	// TODO finish these cloud storage methods.  Security will be a problem.
+
+	 public boolean GetCanUseCloud() {
+		return topLevelMachinesPreferenceNode.getBoolean("can_use_cloud", false);
 	}
 
 	
 	public void SetCanUseCloud(boolean b) {
-		prefs.putBoolean("can_use_cloud", b);
+		topLevelMachinesPreferenceNode.putBoolean("can_use_cloud", b);
 	}
 
-	
 	protected boolean SaveConfigToCloud() {
-		// TODO finish this section
 		return false;
 	}
-	
-	
-	protected void SaveConfigToLocal() {
-		Preferences prefs2 = prefs.node("Machines").node(Long.toString(robot_uid));
-		prefs2.put("limit_top", Double.toString(limit_top));
-		prefs2.put("limit_bottom", Double.toString(limit_bottom));
-		prefs2.put("limit_right", Double.toString(limit_right));
-		prefs2.put("limit_left", Double.toString(limit_left));
-		prefs2.put("m1invert",Boolean.toString(m1invert));
-		prefs2.put("m2invert",Boolean.toString(m2invert));
-		prefs2.put("bobbin_left_diameter", Double.toString(bobbin_left_diameter));
-		prefs2.put("bobbin_right_diameter", Double.toString(bobbin_right_diameter));
-		prefs2.put("feed_rate", Double.toString(max_feed_rate));
-		prefs2.put("startingPosIndex", Integer.toString(startingPositionIndex));
 
-		prefs2.putDouble("paper_left", paper_left);
-		prefs2.putDouble("paper_right", paper_right);
-		prefs2.putDouble("paper_top", paper_top);
-		prefs2.putDouble("paper_bottom", paper_bottom);
+
+
+	 protected boolean LoadConfigFromCloud() {
+		 // Ask for credentials: MC login, password.  auto-remember login name.
+		 //String login = new String();
+		 //String password = new String();
+	
+		 //try {
+		 // Send query
+		 //URL url = new URL("https://marginallyclever.com/drawbot_getmachineconfig.php?name="+login+"pass="+password+"&id="+robot_uid);
+		 //URLConnection conn = url.openConnection();
+		 //BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+		 // read data
+	
+		 // close connection
+		 //rd.close();
+		 //} catch (Exception e) {}
+	
+		return false;
+	}
+	 */
+	
+	
+	protected void saveConfigToLocal() {
+		final Preferences uniqueMachinePreferencesNode = topLevelMachinesPreferenceNode.node(Long.toString(robot_uid));
+		uniqueMachinePreferencesNode.put("limit_top", Double.toString(limit_top));
+		uniqueMachinePreferencesNode.put("limit_bottom", Double.toString(limit_bottom));
+		uniqueMachinePreferencesNode.put("limit_right", Double.toString(limit_right));
+		uniqueMachinePreferencesNode.put("limit_left", Double.toString(limit_left));
+		uniqueMachinePreferencesNode.put("m1invert", Boolean.toString(m1invert));
+		uniqueMachinePreferencesNode.put("m2invert", Boolean.toString(m2invert));
+		uniqueMachinePreferencesNode.put("bobbin_left_diameter", Double.toString(bobbin_left_diameter));
+		uniqueMachinePreferencesNode.put("bobbin_right_diameter", Double.toString(bobbin_right_diameter));
+		uniqueMachinePreferencesNode.put("feed_rate", Double.toString(max_feed_rate));
+		uniqueMachinePreferencesNode.put("startingPosIndex", Integer.toString(startingPositionIndex));
+
+		uniqueMachinePreferencesNode.putDouble("paper_left", paper_left);
+		uniqueMachinePreferencesNode.putDouble("paper_right", paper_right);
+		uniqueMachinePreferencesNode.putDouble("paper_top", paper_top);
+		uniqueMachinePreferencesNode.putDouble("paper_bottom", paper_bottom);
 
 		// save each tool's settings
-		for(int i=0;i<tools.length;++i) {
-			tools[i].SaveConfig(prefs2);
+		for (DrawingTool tool : tools) {
+			tool.saveConfig(uniqueMachinePreferencesNode);
 		}
 
-		// TODO move these values to image filter preferences
-		prefs2.put("paper_margin", Double.toString(paper_margin));
-		prefs2.put("reverseForGlass",Boolean.toString(reverseForGlass));
-		prefs2.put("current_tool", Integer.toString(current_tool));
-
+		// TODO move these values to image filter preferences?
+		uniqueMachinePreferencesNode.put("paper_margin", Double.toString(paperMargin));
+		uniqueMachinePreferencesNode.put("reverseForGlass", Boolean.toString(reverseForGlass));
+		uniqueMachinePreferencesNode.put("current_tool", Integer.toString(current_tool));
 	}
 
 
 	
-	public String GetBobbinLine() {
+	public String getBobbinLine() {
 		return new String("D1 L"+bobbin_left_diameter+" R"+bobbin_right_diameter);
 	}
 
 	
-	public String GetConfigLine() {
+	public String getConfigLine() {
 		return new String("M101 T"+limit_top
 		+" B"+limit_bottom
 		+" L"+limit_left
@@ -588,19 +607,19 @@ public class MachineConfiguration {
 	
 	
 	public String getPenUpString() {
-		return Float.toString(tools[current_tool].GetZOff());
+		return Float.toString(tools.get(current_tool).getZOff());
 	}
 	
 	public String getPenDownString() {
-		return Float.toString(tools[current_tool].GetZOn());
+		return Float.toString(tools.get(current_tool).getZOn());
 	}
 	
-	public boolean IsPaperConfigured() {
+	public boolean isPaperConfigured() {
 		return (paper_top>paper_bottom && paper_right>paper_left);
 	}
 	
-	public void ParseRobotUID(String line) {
-		SaveConfig();
+	public void parseRobotUID(String line) {
+		saveConfig();
 		
 		// get the UID reported by the robot
 		String[] lines = line.split("\\r?\\n");
@@ -608,104 +627,126 @@ public class MachineConfiguration {
 		if(lines.length>0) {
 			try {
 				new_uid = Long.parseLong(lines[0]);
-			}
-			catch(NumberFormatException e) {}
+			} catch(NumberFormatException e) {
+                logger.error("{}", e);
+            }
 		}
 		
 		// new robots have UID=0
-		if(new_uid==0) {
-			new_uid=GetNewRobotUID();
+		if(new_uid == 0) {
+			new_uid = getNewRobotUID();
 		}
 		
 		// load machine specific config
-		LoadConfig(new_uid);
+		loadConfig(new_uid);
 		
 		if(limit_top==0 && limit_bottom==0 && limit_left==0 && limit_right==0) {
 			// probably first time turning on, adjust the machine size
-			AdjustMachineSize();
+			adjustMachineSize();
 		}
 	}
 	
 	/**
 	 * based on http://www.exampledepot.com/egs/java.net/Post.html
 	 */
-	private long GetNewRobotUID() {
-		long new_uid=0;
+	private long getNewRobotUID() {
+		long new_uid = 0;
+		
 		try {
 		    // Send data
 			URL url = new URL("https://marginallyclever.com/drawbot_getuid.php");
 		    URLConnection conn = url.openConnection();
-		    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-		    String line = rd.readLine();
-		    new_uid = Long.parseLong(line);
-		    rd.close();
-		} catch (Exception e) {}
+            try(
+            final InputStream connectionInputStream = conn.getInputStream();
+            final Reader inputStreamReader = new InputStreamReader(connectionInputStream);
+            final BufferedReader rd = new BufferedReader(inputStreamReader)
+            ) {
+                String line = rd.readLine();
+                new_uid = Long.parseLong(line);
+            }
+		} catch (Exception e) {
+			logger.error("{}", e);
+            return 0;
+		}
 
 		// did read go ok?
-		if(new_uid!=0) {
-			// make sure a prefs node is created
-			prefs.node("Machines").node(Long.toString(new_uid));
+		if(new_uid != 0) {
+			// make sure a topLevelMachinesPreferenceNode node is created
+			topLevelMachinesPreferenceNode.node(Long.toString(new_uid));
 			// tell the robot it's new UID.
 			mainGUI.sendLineToRobot("UID "+new_uid);
 
 			// if this is a new robot UID, update the list of available configurations
-			String [] new_list = new String[configurations_available.length+1];
-			for(int i=0;i<configurations_available.length;++i) {
-				new_list[i] = configurations_available[i];
+			final String [] new_list = new String[machineConfigurationsAvailable.length+1];
+			for(int i = 0; i < machineConfigurationsAvailable.length; ++i) {
+				new_list[i] = machineConfigurationsAvailable[i];
 			}
-			new_list[configurations_available.length] = Long.toString(new_uid);
+			new_list[machineConfigurationsAvailable.length] = Long.toString(new_uid); //TODO check this out as it smells.
+			machineConfigurationsAvailable = new_list;
 		}
 		return new_uid;
 	}
 	
 	
-	public int GetMachineCount() {
-		return configurations_available.length;
+	/**
+	 * 
+	 * @return the number of machine configurations that exist on this computer
+	 */
+	public int getMachineCount() {
+		return machineConfigurationsAvailable.length;
 	}
 	
 	
+	/**
+	 * Get the UID of every machine this computer recognizes EXCEPT machine 0, which is only assigned temporarily when a machine is new or before the first software connect.
+	 * @return an array of strings, each string is a machine UID.
+	 */
 	public String[] getKnownMachineNames() {
-		assert(configurations_available.length>1);
-		String [] choices = new String[configurations_available.length-1];
-
-		int j=0;
-		for(int i=0;i<configurations_available.length;++i) {
-			if(configurations_available[i].equals("0")) continue;
-			choices[j++] = configurations_available[i];
+		final String [] availableMachineConfigurations = new String[machineConfigurationsAvailable.length];
+		for(int i = 0; i < machineConfigurationsAvailable.length; i++) {
+			if(machineConfigurationsAvailable[i].equals("0")) {
+				continue;
+			}
+			availableMachineConfigurations[i] = machineConfigurationsAvailable[i];
 		}
 		
-		return choices;
+		return availableMachineConfigurations;
 	}
 	
+	/**
+	 * Get the UID of every machine this computer recognizes INCLUDING machine 0, which is only assigned temporarily when a machine is new or before the first software connect.
+	 * @return an array of strings, each string is a machine UID.
+	 */
+	public String[] getAvailableConfigurations() {
+		return machineConfigurationsAvailable;
+	}
+
 	
 	public int getCurrentMachineIndex() {
-		assert(configurations_available.length>1);
-		int j=0;
-		for(int i=0;i<configurations_available.length;++i) {
-			if(configurations_available[i].equals("0")) continue;
-			if(configurations_available[i].equals(Long.toString(robot_uid))) {
-				return j;
+		for(int i=0;i< machineConfigurationsAvailable.length;i++) {
+			if(machineConfigurationsAvailable[i].equals("0")) continue;
+			if(machineConfigurationsAvailable[i].equals(Long.toString(robot_uid))) {
+				return i;
 			}
-			++j;
 		}
 		
 		return 0;
 	}
 	
 	
-	public double GetPaperWidth() {
+	public double getPaperWidth() {
 		return paper_right - paper_left;
 	}
 	
 	
-	public double GetPaperHeight() {
+	public double getPaperHeight() {
 		return paper_top -paper_bottom;
 	}
 	
 	
-	public double GetPaperScale() {
-		double paper_w=GetPaperWidth();
-		double paper_h=GetPaperHeight();
+	public double getPaperScale() {
+		double paper_w=getPaperWidth();
+		double paper_h=getPaperHeight();
 		
 		if(paper_w>paper_h) {
 			return paper_h/paper_w;
@@ -714,16 +755,16 @@ public class MachineConfiguration {
 		}
 	}
 	
-	public double GetFeedRate() {
+	public double getFeedRate() {
 		return max_feed_rate;
 	}
 	
-	public void SetFeedRate(double f) {
+	public void setFeedRate(double f) {
 		max_feed_rate = f;
-		SaveConfig();
+		saveConfig();
 	}
 	
-	public long GetUID() {
+	public long getUID() {
 		return robot_uid;
 	}
 }

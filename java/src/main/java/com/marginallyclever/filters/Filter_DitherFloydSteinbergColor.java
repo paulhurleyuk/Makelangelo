@@ -1,6 +1,7 @@
 package com.marginallyclever.filters;
 
-import com.marginallyclever.makelangelo.C3;
+import com.marginallyclever.basictypes.C3;
+import com.marginallyclever.basictypes.ColorPalette;
 import com.marginallyclever.makelangelo.MachineConfiguration;
 import com.marginallyclever.makelangelo.MainGUI;
 import com.marginallyclever.makelangelo.MultilingualSupport;
@@ -13,33 +14,21 @@ import java.awt.image.BufferedImage;
  * @author Dan
  * @see <a href="http://stackoverflow.com/questions/5940188/how-to-convert-a-24-bit-png-to-3-bit-png-using-floyd-steinberg-dithering">http://stackoverflow.com/questions/5940188/how-to-convert-a-24-bit-png-to-3-bit-png-using-floyd-steinberg-dithering</a>
  */
-public class Filter_DitherFloydSteinbergRGB extends Filter {
-	public Filter_DitherFloydSteinbergRGB(MainGUI gui, MachineConfiguration mc,
+public class Filter_DitherFloydSteinbergColor extends Filter {
+	public ColorPalette palette;
+	
+	public Filter_DitherFloydSteinbergColor(MainGUI gui, MachineConfiguration mc,
 			MultilingualSupport ms) {
 		super(gui, mc, ms);
-		// TODO Auto-generated constructor stub
+
+		palette = new ColorPalette();
+		palette.addColor(new C3(255,0,0));
+		palette.addColor(new C3(0,255,0));
+		palette.addColor(new C3(0,0,255));
 	}
 
-
-	C3 [] palette = new C3[] {
-		new C3(0,0,0),
-		new C3(255,0,0),
-		new C3(0,255,0),
-		new C3(0,0,255),
-		new C3(255,255,255),
-	};
 	
-	C3 QuantizeColor(C3 c) {
-		C3 closest = palette[0];
-
-	    for (C3 n : palette) 
-	      if (n.diff(c) < closest.diff(c))
-	        closest = n;
-
-	    return closest;
-	}
-	
-	private void DitherDirection(BufferedImage img,int y,C3[] error,C3[] nexterror,int direction) {
+	private void ditherDirection(BufferedImage img,int y,C3[] error,C3[] nexterror,int direction) {
 		int w = img.getWidth();
 		C3 oldPixel = new C3(0,0,0);
 		C3 newPixel = new C3(0,0,0);
@@ -61,7 +50,7 @@ public class Filter_DitherFloydSteinbergRGB extends Filter {
 			// oldpixel := pixel[x][y]
 			oldPixel.set( new C3(img.getRGB(x, y)).add(error[x]) );
 			// newpixel := find_closest_palette_color(oldpixel)
-			newPixel = QuantizeColor(oldPixel);
+			newPixel = palette.quantize(oldPixel);
 			// pixel[x][y] := newpixel
 			img.setRGB(x, y, newPixel.toInt());
 			// quant_error := oldpixel - newpixel
@@ -81,8 +70,8 @@ public class Filter_DitherFloydSteinbergRGB extends Filter {
 		}
 	}
 	
-	
-	public BufferedImage Process(BufferedImage img) {
+	@Override
+	public BufferedImage process(BufferedImage img) {
 		int y;
 		int h = img.getHeight();
 		int w = img.getWidth();
@@ -97,7 +86,7 @@ public class Filter_DitherFloydSteinbergRGB extends Filter {
 		
 		// for each y from top to bottom
 		for(y=0;y<h;++y) {
-			DitherDirection(img,y,error,nexterror,direction);
+			ditherDirection(img,y,error,nexterror,direction);
 			
 			direction = -direction;
 			C3 [] tmp = error;
@@ -124,5 +113,5 @@ public class Filter_DitherFloydSteinbergRGB extends Filter {
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ * along with DrawbotGUI.  If not, see <http://www.gnu.org/licenses/>.
  */

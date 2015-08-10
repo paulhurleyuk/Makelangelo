@@ -20,7 +20,11 @@ import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-
+/**
+ * The GUI for the live driving controls, the start/pause/stop buttons, and the "send gcode" dialog.
+ * @author danroyer
+ * @since 7.1.4
+ */
 public class MakelangeloDriveControls
 	extends JPanel
 	implements ActionListener, KeyListener {
@@ -37,6 +41,7 @@ public class MakelangeloDriveControls
 	private JPanel textInputArea;
 	private JTextField commandLineText;
 	private JButton commandLineSend;
+	private JButton disengageMotors;
 	
 	// to make sure pen isn't on the paper while the machine is paused
 	private boolean penIsUp,penIsUpBeforePause;
@@ -153,10 +158,10 @@ public class MakelangeloDriveControls
 		
 		JPanel corners = new JPanel();
 			corners.setLayout(new GridBagLayout());
-			goTop = new JButton(translator.get("Top"));		goTop.setPreferredSize(new Dimension(80,20));
+			goTop = new JButton(translator.get("Top"));			goTop.setPreferredSize(new Dimension(80,20));
 			goBottom = new JButton(translator.get("Bottom"));	goBottom.setPreferredSize(new Dimension(80,20));
 			goLeft = new JButton(translator.get("Left"));		goLeft.setPreferredSize(new Dimension(80,20));
-			goRight = new JButton(translator.get("Right"));	goRight.setPreferredSize(new Dimension(80,20));
+			goRight = new JButton(translator.get("Right"));		goRight.setPreferredSize(new Dimension(80,20));
 			goUp = new JButton(translator.get("PenUp"));		goUp.setPreferredSize(new Dimension(100,20));
 			goDown = new JButton(translator.get("PenDown"));	goDown.setPreferredSize(new Dimension(100,20));
 			c = new GridBagConstraints();
@@ -177,18 +182,20 @@ public class MakelangeloDriveControls
 			goUp.addActionListener(this);
 			goDown.addActionListener(this);
 		
-	
+			
 		JPanel feedRateControl = new JPanel();
 		feedRateControl.setLayout(new GridBagLayout());
 			c = new GridBagConstraints();
 			feedRate = new JFormattedTextField(NumberFormat.getInstance());  feedRate.setPreferredSize(new Dimension(100,20));
-			feedRate.setText(Double.toString(machineConfiguration.GetFeedRate()));
+			feedRate.setText(Double.toString(machineConfiguration.getFeedRate()));
 			setFeedRate = new JButton(translator.get("Set"));
+			disengageMotors = new JButton(translator.get("DisengageMotors"));
 	
 			c.gridx=3;  c.gridy=0;  feedRateControl.add(new JLabel(translator.get("Speed")),c);
 			c.gridx=4;  c.gridy=0;  feedRateControl.add(feedRate,c);
 			c.gridx=5;  c.gridy=0;  feedRateControl.add(new JLabel(translator.get("Rate")),c);
 			c.gridx=6;  c.gridy=0;  feedRateControl.add(setFeedRate,c);
+			c.gridx=7;  c.gridy=0;  feedRateControl.add(disengageMotors,c);
 		
 	
 		this.add(go);
@@ -197,9 +204,10 @@ public class MakelangeloDriveControls
 		this.add(corners);
 		this.add(feedRateControl);
 	    this.add(new JSeparator());
-	    this.add(GetTextInputField());
+	    this.add(getTextInputField());
 	    
 		setFeedRate.addActionListener(this);
+		disengageMotors.addActionListener(this);
 	}
     
 
@@ -208,7 +216,7 @@ public class MakelangeloDriveControls
 			JButton b = (JButton)subject;
 
 			
-			if(gui.IsFileLoaded() && !gui.isRunning()) {
+			if(gui.isFileLoaded() && !gui.isRunning()) {
 				if( subject == buttonStart ) {
 					gui.startAt(0);
 					return;
@@ -238,7 +246,7 @@ public class MakelangeloDriveControls
 					buttonPause.setText(translator.get("Pause"));
 					gui.unPause();
 					// TODO: if the robot is not ready to unpause, this might fail and the program would appear to hang.
-					gui.SendFileCommand();
+					gui.sendFileCommand();
 				} else {
 					penIsUpBeforePause=penIsUp;
 					gui.raisePen();
@@ -248,7 +256,7 @@ public class MakelangeloDriveControls
 				return;
 			}
 			if( subject == buttonHalt ) {
-				gui.Halt();
+				gui.halt();
 				return;
 			}
 			
@@ -267,10 +275,12 @@ public class MakelangeloDriveControls
 				fr=fr.replaceAll("[ ,]","");
 				double feed_rate = Double.parseDouble(fr);
 				if(feed_rate<0.001) feed_rate=0.001;
-				machineConfiguration.SetFeedRate(feed_rate);
+				machineConfiguration.setFeedRate(feed_rate);
 				feedRate.setText(Double.toString(feed_rate));
 				gui.sendLineToRobot("G00 G21 F"+feed_rate);
-			} else {
+			} 
+			else if(b==disengageMotors) gui.sendLineToRobot("M18");
+			else {
 				gui.sendLineToRobot("G91");  // set relative mode
 
 				if(b==down100) gui.sendLineToRobot("G0 Y-100");
@@ -291,7 +301,7 @@ public class MakelangeloDriveControls
 			}
 	  }
 
-	private JPanel GetTextInputField() {
+	private JPanel getTextInputField() {
 		textInputArea = new JPanel(new GridLayout(0,1));
 		commandLineText = new JTextField(0);
 		commandLineText.setPreferredSize(new Dimension(10,10));
@@ -321,7 +331,7 @@ public class MakelangeloDriveControls
     @Override
 	public void keyReleased(KeyEvent e) {
 		if(e.getKeyCode() == KeyEvent.VK_ENTER) {
-			gui.ProcessLine(commandLineText.getText());
+			gui.processLine(commandLineText.getText());
 			commandLineText.setText("");
 		}
 	}
@@ -335,13 +345,9 @@ public class MakelangeloDriveControls
 	private long getStartingLineNumber() {
 		final JPanel panel = new JPanel(new GridBagLayout());		
 		final JTextField starting_line = new JTextField("0",8);
-		final JButton cancel = new JButton(translator.get("Cancel"));
-		final JButton start = new JButton(translator.get("Start"));
 		GridBagConstraints c = new GridBagConstraints();
 		c.gridwidth=2;	c.gridx=0;  c.gridy=0;  panel.add(new JLabel(translator.get("StartAtLine")),c);
 		c.gridwidth=2;	c.gridx=2;  c.gridy=0;  panel.add(starting_line,c);
-		c.gridwidth=1;	c.gridx=0;  c.gridy=1;  panel.add(cancel,c);
-		c.gridwidth=1;	c.gridx=2;  c.gridy=1;  panel.add(start,c);
 		
 	    int result = JOptionPane.showConfirmDialog(null, panel, translator.get("StartAt"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 	    if (result == JOptionPane.OK_OPTION) {

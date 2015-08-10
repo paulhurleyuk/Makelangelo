@@ -5,11 +5,14 @@ import com.marginallyclever.makelangelo.MachineConfiguration;
 import com.marginallyclever.makelangelo.MainGUI;
 import com.marginallyclever.makelangelo.MultilingualSupport;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.swing.*;
+
 import java.awt.*;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 
 public class Filter_GeneratorYourMessageHere extends Filter {
@@ -22,55 +25,53 @@ public class Filter_GeneratorYourMessageHere extends Filter {
 	protected int chars_per_line=35;
 	protected static String lastMessage = "";
 
+    private final Logger logger = LoggerFactory.getLogger(Filter_GeneratorYourMessageHere.class);
+
 	public Filter_GeneratorYourMessageHere(MainGUI gui,
 			MachineConfiguration mc, MultilingualSupport ms) {
 		super(gui, mc, ms);
-		// TODO Auto-generated constructor stub
 	}
 
-	public String GetName() { return translator.get("YourMsgHereName"); }
+	@Override
+	public String getName() { return translator.get("YourMsgHereName"); }
 	
-	public void Generate(String dest) {
+	public void generate(String dest) {
 		final JTextArea text = new JTextArea(lastMessage,6,60);
 	
 		JPanel panel = new JPanel(new GridLayout(0,1));
 		panel.add(new JScrollPane(text));
 		
-	    int result = JOptionPane.showConfirmDialog(null, panel, GetName(), JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+	    int result = JOptionPane.showConfirmDialog(null, panel, getName(), JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 	    if (result == JOptionPane.OK_OPTION) {
 			lastMessage = text.getText();
-			CreateMessage(lastMessage,dest);
+			createMessage(lastMessage,dest);
 			
 			// TODO Move to GUI?
-			mainGUI.Log("<font color='green'>Completed.</font>\n");
-			mainGUI.PlayConversionFinishedSound();
-			mainGUI.LoadGCode(dest);
+			mainGUI.log("<font color='green'>Completed.</font>\n");
 	    }
 	}
 
-	protected void CreateMessage(String str,String dest) {
-		//System.out.println("output file = "+outputFile);
+	protected void createMessage(String str,String dest) {
 
-		try {
-			OutputStreamWriter output = new OutputStreamWriter(new FileOutputStream(dest),"UTF-8");
+        try (final OutputStream fileOutputStream = new FileOutputStream(dest);
+             final Writer output = new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8)) {
 
-			tool = machine.GetCurrentTool();
-			SetupTransform();
-			output.write(machine.GetConfigLine()+";\n");
-			output.write(machine.GetBobbinLine()+";\n");
-			tool.WriteChangeTo(output);
+			tool = machine.getCurrentTool();
+			setupTransform();
+			output.write(machine.getConfigLine()+";\n");
+			output.write(machine.getBobbinLine()+";\n");
+			tool.writeChangeTo(output);
 			
-			TextSetAlign(Align.CENTER);
-			TextSetVAlign(VAlign.MIDDLE);
-			TextCreateMessageNow(lastMessage,output);
+			textSetAlign(Align.CENTER);
+			textSetVAlign(VAlign.MIDDLE);
+			textCreateMessageNow(lastMessage,output);
 
-			TextSetAlign(Align.RIGHT);
-			TextSetVAlign(VAlign.TOP);
-			TextSetPosition(image_width,image_height);
-			TextCreateMessageNow("Makelangelo #"+Long.toString(machine.GetUID()),output);
-			
-			output.close();
-		}
-		catch(IOException ex) {}
+			textSetAlign(Align.RIGHT);
+			textSetVAlign(VAlign.TOP);
+			textSetPosition(image_width,image_height);
+			textCreateMessageNow("Makelangelo #" + Long.toString(machine.getUID()), output);
+		} catch(IOException e) {
+            logger.error("{}", e);
+        }
 	}
 }

@@ -22,7 +22,8 @@ public class Filter_BlackAndWhite extends Filter {
 		levels = (double)_levels;
 	}
 	
-	public BufferedImage Process(BufferedImage img) {
+	@Override
+	public BufferedImage process(BufferedImage img) {
 		int h = img.getHeight();
 		int w = img.getWidth();
 		int x,y,i;
@@ -73,7 +74,8 @@ public class Filter_BlackAndWhite extends Filter {
 	 * @param img the <code>java.awt.image.BufferedImage</code> this filter is to process.
 	 * @return the altered image
 	 */
-	public BufferedImage Process_Via_Histogram(BufferedImage img) {
+	@Deprecated
+	public BufferedImage processViaHistogram(BufferedImage img) {
 		int h = img.getHeight();
 		int w = img.getWidth();
 
@@ -146,5 +148,5 @@ public class Filter_BlackAndWhite extends Filter {
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ * along with DrawbotGUI.  If not, see <http://www.gnu.org/licenses/>.
  */

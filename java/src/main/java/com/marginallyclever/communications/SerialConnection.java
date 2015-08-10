@@ -15,7 +15,7 @@ import com.marginallyclever.makelangelo.MultilingualSupport;
  */
 public final class SerialConnection implements SerialPortEventListener, MarginallyCleverConnection {
     private SerialPort serialPort;
-    private static final int BAUD_RATE = 57600;
+    private static final int BAUD_RATE = 115200;
     
     private String connectionName = new String();
     private boolean portOpened=false;
@@ -93,23 +93,41 @@ public final class SerialConnection implements SerialPortEventListener, Marginal
      * Check if the robot reports an error and if so what line number.
      * @return -1 if there was no error, otherwise the line number containing the error.
      */
-    protected int ErrorReported() {
+    protected int errorReported() {
         if(portConfirmed==false) return -1;
 
         if( serial_recv_buffer.lastIndexOf(NOCHECKSUM) != -1 ) {
             String after_error = serial_recv_buffer.substring(serial_recv_buffer.lastIndexOf(NOCHECKSUM) + NOCHECKSUM.length());
-            String x=GetNumberPortion(after_error);
-            return Integer.decode(x);
+            String x=getNumberPortion(after_error);
+            int err=0;
+            try {
+            	err = Integer.decode(x);
+            }
+            catch(Exception e) {}
+            
+            return err;
         }
         if( serial_recv_buffer.lastIndexOf(BADCHECKSUM) != -1 ) {
             String after_error = serial_recv_buffer.substring(serial_recv_buffer.lastIndexOf(BADCHECKSUM) + BADCHECKSUM.length());
-            String x=GetNumberPortion(after_error);
-            return Integer.decode(x);
+            String x=getNumberPortion(after_error);
+            int err=0;
+            try {
+            	err = Integer.decode(x);
+            }
+            catch(Exception e) {}
+            
+            return err;
         }
         if( serial_recv_buffer.lastIndexOf(BADLINENUM) != -1 ) {
             String after_error = serial_recv_buffer.substring(serial_recv_buffer.lastIndexOf(BADLINENUM) + BADLINENUM.length());
-            String x=GetNumberPortion(after_error);
-            return Integer.decode(x);
+            String x=getNumberPortion(after_error);
+            int err=0;
+            try {
+            	err = Integer.decode(x);
+            }
+            catch(Exception e) {}
+            
+            return err;
         }
 
         return -1;
@@ -120,24 +138,24 @@ public final class SerialConnection implements SerialPortEventListener, Marginal
      * Complete the handshake, load robot-specific configuration, update the menu, repaint the preview with the limits.
      * @return true if handshake succeeds.
      */
-    public boolean ConfirmPort() {
+    public boolean confirmPort() {
         if(portConfirmed==true) return true;
         if(serial_recv_buffer.lastIndexOf(hello) < 0) return false;
 
         portConfirmed=true;
 
         String after_hello = serial_recv_buffer.substring(serial_recv_buffer.lastIndexOf(hello) + hello.length());
-        machine.ParseRobotUID(after_hello);
+        machine.parseRobotUID(after_hello);
 
         mainGUI.getMainframe().setTitle(translator.get("TitlePrefix")
-                + Long.toString(machine.GetUID())
+                + Long.toString(machine.getUID())
                 + translator.get("TitlePostfix"));
 
-        mainGUI.SendConfig();
-        mainGUI.getPreviewPane().updateMachineConfig();
+        mainGUI.sendConfig();
+        mainGUI.getDrawPanel().updateMachineConfig();
 
         mainGUI.updateMenuBar();
-        mainGUI.getPreviewPane().setConnected(true);
+        mainGUI.getDrawPanel().setConnected(true);
 
         // rebuild the drive pane so that the feed rates are correct.
         mainGUI.updatedriveControls();
@@ -168,23 +186,23 @@ public final class SerialConnection implements SerialPortEventListener, Marginal
                                 // don't repeat the ping
                                 //Log("<span style='color:#FF00A5'>"+line2_mod+"</span>");
                             } else {
-                                mainGUI.Log("<span style='color:#FFA500'>" + line2_mod + "</span>");
+                                mainGUI.log("<span style='color:#FFA500'>" + line2_mod + "</span>");
                             }
                             lastLineWasCue=true;
                         } else {
                             lastLineWasCue=false;
-                            mainGUI.Log("<span style='color:#FFA500'>" + line2_mod + "</span>");
+                            mainGUI.log("<span style='color:#FFA500'>" + line2_mod + "</span>");
                         }
                     }
 
-                    int error_line = ErrorReported();
+                    int error_line = errorReported();
                     if(error_line != -1) {
                         mainGUI.getGcodeFile().linesProcessed = error_line;
                         serial_recv_buffer="";
-                        mainGUI.SendFileCommand();
-                    } else if(ConfirmPort()) {
+                        mainGUI.sendFileCommand();
+                    } else if(confirmPort()) {
                         serial_recv_buffer="";
-                        mainGUI.SendFileCommand();
+                        mainGUI.sendFileCommand();
                     }
                 }
             } catch (SerialPortException e) {}
@@ -203,7 +221,7 @@ public final class SerialConnection implements SerialPortEventListener, Marginal
      * @param src
      * @return the portion of the string that is actually a number
      */
-    private String GetNumberPortion(String src) {
+    private String getNumberPortion(String src) {
     	src = src.trim();
         int length = src.length();
         String result = "";

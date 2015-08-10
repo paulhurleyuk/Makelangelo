@@ -11,7 +11,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.Writer;
 
 
 public class DrawingTool_Spraypaint extends DrawingTool {
@@ -34,19 +34,19 @@ public class DrawingTool_Spraypaint extends DrawingTool {
 		old_y=0;
 	}
 
-	public void WriteOn(OutputStreamWriter out) throws IOException {
+	public void writeOn(Writer out) throws IOException {
 		is_up=false;
 	}
 
-	public void WriteOff(OutputStreamWriter out) throws IOException {
+	public void writeOff(Writer out) throws IOException {
 		is_up=true;
 	}
 		
-	public void WriteMoveTo(OutputStreamWriter out,float x,float y) throws IOException {
+	public void writeMoveTo(Writer out,float x,float y) throws IOException {
 		if(is_up) {
 			out.write("G00 X"+x+" Y"+y+";\n");			
 		} else {
-			// TODO make this into a set of dots
+			// Make a set of dots in a row, instead of a single continuous line
 			//out.write("G00 X"+x+" Y"+y+";\n");
 			float dx=x-old_x;
 			float dy=y-old_y;
@@ -59,21 +59,21 @@ public class DrawingTool_Spraypaint extends DrawingTool {
 				 px = old_x + dx * d/len;
 				 py = old_y + dy * d/len;		
 				out.write("G00 X"+px+" Y"+py+" F"+feed_rate+";\n");	
-				super.WriteOn(out);
-				super.WriteOff(out);	
+				super.writeOn(out);
+				super.writeOff(out);	
 			}
 			d=len-r;
 			 px = old_x + dx * d/len;
 			 py = old_y + dy * d/len;		
 			out.write("G00 X"+px+" Y"+py+" F"+feed_rate+";\n");	
-			super.WriteOn(out);
-			super.WriteOff(out);
+			super.writeOn(out);
+			super.writeOff(out);
 		}
 		old_x=x;
 		old_y=y;
 	}
 	
-	public void Adjust() {
+	public void adjust() {
 		final JDialog driver = new JDialog(mainGUI.getParentFrame(),translator.get("spraypaintToolAdjust"),true);
 		driver.setLayout(new GridBagLayout());
 
@@ -148,7 +148,7 @@ public class DrawingTool_Spraypaint extends DrawingTool {
 					z_off = Float.valueOf(spraypaintUp.getText());
 					z_on = Float.valueOf(spraypaintDown.getText());
 					z_rate = Float.valueOf(spraypaintZRate.getText());
-					machine.SaveConfig();
+					machine.saveConfig();
 					driver.dispose();
 				}
 				if(subject == buttonCancel) {

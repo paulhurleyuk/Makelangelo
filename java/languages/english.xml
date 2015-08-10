@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE language>
 <language>
 	<meta>
 		<name>English</name>
@@ -138,12 +139,12 @@
 	<string>
 		<key>ConversionOptions</key>
 		<value>Conversion options</value>
-		<hint>dialog title</hint>
+		<hint>Conversion options dialog title</hint>
 	</string>
 	<string>
 		<key>FlipForGlass</key>
 		<value>Flip for glass</value>
-		<hint>conversion options</hint>
+		<hint>conversion option to flip for glass</hint>
 	</string>
 
 	<string>
@@ -165,7 +166,7 @@
 	<string>
 		<key>PaperMargin</key>
 		<value>Margin at paper edge (%)</value>
-		<hint>conversion options</hint>
+		<hint>conversion option to adjust margin percentage at paper edge.</hint>
 	</string>
 	<string>
 		<key>Converting</key>
@@ -191,7 +192,7 @@
 	<string>
 		<key>ConversionStyle</key>
 		<value>Conversion style</value>
-		<hint>conversion options</hint>
+		<hint>conversion option to choose a filter aka conversion style.</hint>
 	</string>
 
 	<string>
@@ -747,6 +748,12 @@
 		<key>StatusRemaining</key>
 		<value>Estimated time left: </value>
 		<hint>time machine will be drawing</hint>
+	</string>
+	
+	<string>
+		<key>DisengageMotors</key>
+		<value>Disengage</value>
+		<hint>Disengage Button on manual driving dialog</hint>
 	</string>
 
   <!-- Because the version string is declared in Java, AboutHTMLBeforeVersionNumber and AboutHTMLAfterVersionNumber are

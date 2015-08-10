@@ -3,6 +3,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Scanner;
 
 /**
@@ -24,6 +25,7 @@ public class GCodeFile {
 	public int estimate_count=0;
 	public float scale=1.0f;
 	public float feed_rate=1.0f;
+	public boolean changed=false;
 
 	
 	// returns angle of dy/dx as a value from 0...2PI
@@ -34,8 +36,8 @@ public class GCodeFile {
 	}
 	
 	
-	void EstimateDrawTime() {
-		int i,j;
+	void estimateDrawTime() {
+		int j;
 		
 		double px=0,py=0,pz=0, length=0, x,y,z,ai,aj;
 		feed_rate=1.0f;
@@ -44,8 +46,9 @@ public class GCodeFile {
 		estimated_length=0;
 		estimate_count=0;
 		
-		for(i=0;i<lines.size();++i) {
-			String line=lines.get(i);
+		Iterator<String> iLine = lines.iterator();
+		while(iLine.hasNext()) {
+			String line = iLine.next();
 			String[] pieces=line.split(";");  // comments come after a semicolon.
 			if(pieces.length==0) continue;
 			
@@ -56,7 +59,7 @@ public class GCodeFile {
 				if(tokens[j].equals("G21")) scale=0.10f;  // mm->cm
 				if(tokens[j].startsWith("F")) {
 					feed_rate=Float.valueOf(tokens[j].substring(1)) * scale;
-					assert(feed_rate!=Float.NaN && feed_rate!=0);
+					assert(!Float.isNaN(feed_rate) && feed_rate!=0);
 				}
 			}
 			
@@ -76,7 +79,7 @@ public class GCodeFile {
 			if(z!=pz) {
 				// pen up/down action
 				estimated_time+=(z-pz)/feed_rate;  // seconds?
-				assert(estimated_time!=Float.NaN);
+				assert(!Float.isNaN(estimated_time));
 			}
 			
 			if(tokens[0].equals("G00") || tokens[0].equals("G0") ||
@@ -86,7 +89,7 @@ public class GCodeFile {
 				double ddy=y-py;
 				length=Math.sqrt(ddx*ddx+ddy*ddy);
 				estimated_time+=length/feed_rate;
-				assert(estimated_time!=Float.NaN);
+				assert(!Float.isNaN(estimated_time));
 				estimated_length+=length;
 				++estimate_count;
 				px=x;
@@ -112,7 +115,7 @@ public class GCodeFile {
 				// length of arc=theta*r (http://math.about.com/od/formulas/ss/surfaceareavol_9.htm)
 				length = theta * radius;
 				estimated_time+=length/feed_rate;
-				assert(estimated_time!=Float.NaN);
+				assert(!Float.isNaN(estimated_time));
 				estimated_length+=length;
 				++estimate_count;
 				px=x;
@@ -120,7 +123,7 @@ public class GCodeFile {
 				pz=z;
 			}
 		}  // for ( each instruction )
-		assert(estimated_time!=Float.NaN);
+		assert(!Float.isNaN(estimated_time));
 		// processing time for each instruction
 	   	estimated_time += estimate_count * 0.007617845117845f;
 	   	// conversion to ms?
@@ -129,15 +132,15 @@ public class GCodeFile {
 	
 	
 	// close the file, clear the preview tab
-	public void CloseFile() {
+	public void closeFile() {
 		if(fileOpened==true) {
 			fileOpened=false;
 		}
 	}
 	
 	
-	public void Load(String filename) throws IOException {
-		CloseFile();
+	public void load(String filename) throws IOException {
+		closeFile();
 
     	Scanner scanner = new Scanner(new FileInputStream(filename));
     	
@@ -153,11 +156,11 @@ public class GCodeFile {
 	      scanner.close();
 	    }
 	    fileOpened=true;
-	    EstimateDrawTime();
+	    estimateDrawTime();
 	}
 	
 	
-	public void Save(String filename) throws IOException {
+	public void save(String filename) throws IOException {
 		FileOutputStream out = new FileOutputStream(filename);
 		String temp;
 		
@@ -190,5 +193,5 @@ public class GCodeFile {
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ * along with DrawbotGUI.  If not, see <http://www.gnu.org/licenses/>.
  */
