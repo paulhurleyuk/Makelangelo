@@ -26,7 +26,7 @@
 //#define USE_LIMIT_SWITCH  (1)
 
 
-// which motor is on which pin?
+// which motor is on which pin?-Paul swapped these 
 #define M1_PIN          (2)
 #define M2_PIN          (1)
 
@@ -35,6 +35,7 @@
 #define R_PIN           (A5)
 
 // stepper motor @ 200 steps per turn
+//looks like my little steppers are 2050 steps per turn, but v slow
 #define STEPPER_STEPS_PER_TURN    (200.0)
 #define MICROSTEPPING_MULTIPLIER  (1.0)
 #define STEPS_PER_TURN            (STEPPER_STEPS_PER_TURN*MICROSTEPPING_MULTIPLIER)
@@ -60,9 +61,10 @@
 // 2.5132741228718345 / 200 = 0.0125663706 thread moved each step.
 // NEMA17 are rated up to 3000RPM.  Adafruit can handle >1000RPM.
 // These numbers directly affect the maximum velocity.
+// are we missing a MAX_RPM value ?
 #define MAX_STEPS_S     (STEPS_PER_TURN*MAX_RPM/60.0)  // steps/s
 
-#define MAX_FEEDRATE    (10000.0)
+#define MAX_FEEDRATE    (4000.0)
 #define MIN_FEEDRATE    (1.0) // steps / second
 
 // for arc directions
@@ -91,8 +93,10 @@
 #if MOTHERBOARD == 1
 #define M1_STEP  m1.step
 #define M2_STEP  m2.step
-#define M1_ONESTEP(x)  m1.onestep(x)
-#define M2_ONESTEP(x)  m2.onestep(x)
+//#define M1_ONESTEP(x)  m1.onestep(x)
+//#define M2_ONESTEP(x)  m2.onestep(x)
+#define M1_ONESTEP(x)  m1.step(1,x)
+#define M2_ONESTEP(x)  m2.step(1,x)
 #endif
 #if MOTHERBOARD == 2
 #define M1_STEP  m1->step
@@ -227,7 +231,6 @@ static void adjustSpoolDiameter(float diameter1) {
 #if VERBOSE > 2
   Serial.print(F("SpoolDiameter = "));  Serial.println(SPOOL_DIAMETER,3);
   Serial.print(F("THREAD_PER_STEP="));  Serial.println(THREAD_PER_STEP,3);
-  Serial.print(F("MAX_VEL="));  Serial.println(MAX_VEL,3);
 #endif
 }
 
@@ -326,7 +329,14 @@ static void FK(float l1, float l2,float &x,float &y) {
 
   x = (float)( l1 + l2 ) / 2.0;
   y = x - (float)l2;
-#else
+#endif
+#ifdef TRADITIONALXY
+  l1 *= THREAD_PER_STEP;
+  l2 *= THREAD_PER_STEP;
+  x = l1;
+  y = l2;
+#endif
+#ifdef POLARGRAPH2
   float a = (float)l1 * THREAD_PER_STEP;
   float b = (limit_right-limit_left);
   float c = (float)l2 * THREAD_PER_STEP;
@@ -369,18 +379,19 @@ static void line(float x,float y,float z) {
   long i;
   
   long ad = max(ad1,ad2);
+  /*
   long d = 1500;
   long accelerate_until = d - step_delay;
   long decelerate_after = ad - accelerate_until;
   if(decelerate_after < accelerate_until ) {
     decelerate_after = accelerate_until = ad/2;
   }
-
-#ifdef VERBOSE > 2
+#if VERBOSE > 2
   Serial.print("s ");  Serial.println(ad);
   Serial.print("a ");  Serial.println(accelerate_until);
   Serial.print("d ");  Serial.println(decelerate_after);
 #endif
+  */
 
   setPenAngle((int)z);
   
@@ -388,15 +399,17 @@ static void line(float x,float y,float z) {
   if(ad1>ad2) {
     for(i=0;i<ad1;++i) {
       M1_ONESTEP(dir1);
+      delay(2);
       over+=ad2;
       if(over>=ad1) {
         over-=ad1;
         M2_ONESTEP(dir2);
+        delay(2);
       }
       
-      if(i<accelerate_until) d--;
-      if(i>=decelerate_after) d++;
-      pause(d);
+      //if(i<accelerate_until) d--;
+      //if(i>=decelerate_after) d++;
+      //pause(d);
 #ifdef USE_LIMIT_SWITCH
       if(readSwitches()) return;
 #endif
@@ -404,15 +417,17 @@ static void line(float x,float y,float z) {
   } else {
     for(i=0;i<ad2;++i) {
       M2_ONESTEP(dir2);
+      delay(2);
       over+=ad1;
       if(over>=ad2) {
         over-=ad2;
         M1_ONESTEP(dir1);
+        delay(2);
       }
       
-      if(i<accelerate_until) d--;
-      if(i>=decelerate_after) d++;
-      pause(d);
+      //if(i<accelerate_until) d--;
+      //if(i>=decelerate_after) d++;
+      //pause(d);
 #ifdef USE_LIMIT_SWITCH
       if(readSwitches()) return;
 #endif
@@ -594,6 +609,7 @@ static void where() {
   Serial.print(posy);
   Serial.print(F(" Z"));
   Serial.print(posz);
+  Serial.print(' ');
   printFeedRate();
   Serial.print(F("\n"));
 }
@@ -817,20 +833,20 @@ void processConfig() {
   char j=parsenumber('J',0);
   if(i!=0) {
     if(i>0) {
-      M1_REEL_IN  = HIGH;
-      M1_REEL_OUT = LOW;
+      M1_REEL_IN  = FORWARD;
+      M1_REEL_OUT = BACKWARD;
     } else {
-      M1_REEL_IN  = LOW;
-      M1_REEL_OUT = HIGH;
+      M1_REEL_IN  = BACKWARD;
+      M1_REEL_OUT = FORWARD;
     }
   }
   if(j!=0) {
     if(j>0) {
-      M2_REEL_IN  = HIGH;
-      M2_REEL_OUT = LOW;
+      M2_REEL_IN  = FORWARD;
+      M2_REEL_OUT = BACKWARD;
     } else {
-      M2_REEL_IN  = LOW;
-      M2_REEL_OUT = HIGH;
+      M2_REEL_IN  = BACKWARD;
+      M2_REEL_OUT = FORWARD;
     }
   }
   
@@ -965,10 +981,22 @@ static void processCommand() {
       if(*ptr == m1d) {
         dir = amount < 0 ? M1_REEL_IN : M1_REEL_OUT;
         amount=abs(amount);
+#if VERBOSE > 1
+        Serial.print(F("M1 "));
+        Serial.print(amount);
+        Serial.print(' ');
+        Serial.println(dir);
+#endif
         for(i=0;i<amount;++i) {  M1_STEP(1,dir);  delay(2);  }
       } else if(*ptr == m2d) {
         dir = amount < 0 ? M2_REEL_IN : M2_REEL_OUT;
         amount = abs(amount);
+#if VERBOSE > 1
+        Serial.print(F("M2 "));
+        Serial.print(amount);
+        Serial.print(' ');
+        Serial.println(dir);
+#endif
         for(i=0;i<amount;++i) {  M2_STEP(1,dir);  delay(2);  }
       }
     }
