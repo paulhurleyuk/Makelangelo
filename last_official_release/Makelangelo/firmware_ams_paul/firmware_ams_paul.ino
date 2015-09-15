@@ -10,7 +10,8 @@
 // CONSTANTS
 //------------------------------------------------------------------------------
 //#define MOTHERBOARD 1  // Adafruit Motor Shield 1
-#define MOTHERBOARD 2  // Adafruit Motor Shield 2
+//#define MOTHERBOARD 2  // Adafruit Motor Shield 2
+#define MOTHERBOARD 3  // AccelStepper Driver compatible (easydriver/pololu)
 
 // machine style
 #define POLARGRAPH2  // uncomment this line if you use a polargraph like the Makelangelo
@@ -40,9 +41,7 @@
 #define MICROSTEPPING_MULTIPLIER  (1.0)
 #define STEPS_PER_TURN            (STEPPER_STEPS_PER_TURN*MICROSTEPPING_MULTIPLIER)
 
-
 #define NUM_TOOLS  (6)
-
 
 // *****************************************************************************
 // *** Don't change the constants below unless you know what you're doing.   ***
@@ -98,6 +97,7 @@
 #define M1_ONESTEP(x)  m1.step(1,x)
 #define M2_ONESTEP(x)  m2.step(1,x)
 #endif
+
 #if MOTHERBOARD == 2
 #define M1_STEP  m1->step
 #define M2_STEP  m2->step
@@ -108,6 +108,14 @@
 #define SHIELD_ADDRESS (0x60)
 #endif
 
+#if MOTHERBOARD == 3
+#define M1_STEP  m1_step
+#define M2_STEP  m2_step
+#define M1_ONESTEP(x)  m1_onestep(x)
+#define M2_ONESTEP(x)  m2_onestep(x) // TODO: need to define these as functions
+#define FORWARD 1
+#define BACKWARD -1
+#endif
 //------------------------------------------------------------------------------
 // EEPROM MEMORY MAP
 //------------------------------------------------------------------------------
@@ -130,6 +138,11 @@
 #if MOTHERBOARD == 2
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
+#endif
+
+#if MOTHERBOARD == 3
+#include <Wire.h>
+#include <AccelStepper.h>
 #endif
 
 // Default servo library
@@ -155,11 +168,20 @@
 static AF_Stepper m1((int)STEPS_PER_TURN, M2_PIN);
 static AF_Stepper m2((int)STEPS_PER_TURN, M1_PIN);
 #endif
+
 #if MOTHERBOARD == 2
 // Initialize Adafruit stepper controller
 Adafruit_MotorShield AFMS0 = Adafruit_MotorShield(SHIELD_ADDRESS);
 Adafruit_StepperMotor *m1;
 Adafruit_StepperMotor *m2;
+#endif
+
+#if MOTHERBOARD == 3
+// Initialize AccellStepper
+AccelStepper m1(1,2,3);//initialise accelstepper for a two wire board, pin 5 step, pin 4 dir
+//m1.setEnablePin(4);
+AccelStepper m2(1,5,6);//initialise accelstepper for a two wire board, pin 5 step, pin 4 dir
+//m2.setEnablePin(7);
 #endif
 
 static Servo s1;
@@ -219,6 +241,29 @@ long line_number;
 // METHODS
 //------------------------------------------------------------------------------
 
+#if MOTHERBOARD == 3  // Define functions for accelstepper
+
+static void m1_step(int dist, char dir) { // Not sure why dist is used, its always 1.  We'll assume it'll always be one
+  m1.move(dir);
+  m1.run();
+}
+
+static void  m2_step(int dist, char dir) {
+  m1.move(dir);
+  m1.run();  
+}
+
+static void m1_onestep(char dir) {
+  m1.move(dir);
+  m1.run();
+}
+
+static void m2_onestep(char dir) {
+  m2.move(dir);
+  m2.run();
+}
+
+#endif
 
 
 //------------------------------------------------------------------------------
@@ -386,6 +431,7 @@ static void line(float x,float y,float z) {
   if(decelerate_after < accelerate_until ) {
     decelerate_after = accelerate_until = ad/2;
   }
+  
 #if VERBOSE > 2
   Serial.print("s ");  Serial.println(ad);
   Serial.print("a ");  Serial.println(accelerate_until);
@@ -767,12 +813,21 @@ void disable_motors() {
   m1->release();
   m2->release();
 #endif
+#if MOTHERBOARD == 3
+  m1.disableOutputs();
+  m2.disableOutputs();
+#endif
 }
 
 
 void activate_motors() {
+#if MOTHERBOARD == 3
+  m1.enableOutputs();
+  m2.enableOutputs();
+#endif  
   M1_STEP(1,1);  M1_STEP(1,-1);
   M2_STEP(1,1);  M2_STEP(1,-1);
+  
 }
 
 
