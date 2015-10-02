@@ -5,7 +5,7 @@
 		<name>English</name>
 		<author>Dan Royer (dan@marginallyclever.com)</author>
 	</meta>
-	
+
 	<string>
 		<key>Cancel</key>
 		<value>Cancel</value>
@@ -27,34 +27,44 @@
 		<hint>as in, "could not find FILEX".  keep the space at the end.</hint>
 	</string>
 	<string>
+		<key>ClickAndDrag</key>
+		<value>Click &amp; Drag</value>
+		<hint>live drawing panel</hint>
+	</string>
+	<string>
+		<key>configureMachine</key>
+		<value>Settings</value>
+		<hint>open machine settings dialog</hint>
+	</string>
+	<string>
 		<key>MachineWidth</key>
 		<value>Machine width</value>
-		<hint>adjust machine settings</hint>
+		<hint>Machine settings</hint>
 	</string>
 	<string>
 		<key>MachineHeight</key>
 		<value>Machine height</value>
-		<hint>adjust machine settings</hint>
+		<hint>Machine settings</hint>
 	</string>
 	<string>
 		<key>PaperWidth</key>
 		<value>Paper width</value>
-		<hint>adjust machine settings</hint>
+		<hint>machine size control panel</hint>
 	</string>
 	<string>
 		<key>PaperHeight</key>
 		<value>Paper height</value>
-		<hint>adjust machine settings</hint>
+		<hint>machine size control panel</hint>
 	</string>
 	<string>
 		<key>InvertLeft</key>
 		<value>Invert left</value>
-		<hint>adjust machine settings</hint>
+		<hint>jog motor control panel</hint>
 	</string>
 	<string>
 		<key>InvertRight</key>
 		<value>Invert right</value>
-		<hint>adjust machine settings</hint>
+		<hint>jog motor control panel</hint>
 	</string>
 	<string>
 		<key>ToolType</key>
@@ -62,9 +72,14 @@
 		<hint>tool settings</hint>
 	</string>
 	<string>
+		<key>PaperSize</key>
+		<value>Paper Size</value>
+		<hint>machine size control panel</hint>
+	</string>
+	<string>
 		<key>AdjustPulleySize</key>
-		<value>Adjust pulley size</value>
-		<hint>Adjust pulleys</hint>
+		<value>Adjust pulley diameter</value>
+		<hint>machine size control panel</hint>
 	</string>
 	<string>
 		<key>Left</key>
@@ -75,11 +90,6 @@
 		<key>Right</key>
 		<value>Right</value>
 		<hint>used in many places</hint>
-	</string>
-	<string>
-		<key>Diameter</key>
-		<value>Diameter</value>
-		<hint>Adjust pulleys</hint>
 	</string>
 	<string>
 		<key>Millimeters</key>
@@ -139,34 +149,24 @@
 	<string>
 		<key>ConversionOptions</key>
 		<value>Conversion options</value>
-		<hint>Conversion options dialog title</hint>
+		<hint>dialog title</hint>
 	</string>
 	<string>
 		<key>FlipForGlass</key>
 		<value>Flip for glass</value>
-		<hint>conversion option to flip for glass</hint>
+		<hint>conversion options</hint>
 	</string>
 
-	<string>
-		<key>Cancel</key>
-		<value>Cancel</value>
-		<hint>used in many places</hint>
-	</string>
 	<string>
 		<key>Start</key>
 		<value>Start</value>
 		<hint>As in "start drawing"</hint>
 	</string>
-	<string>
-		<key>Save</key>
-		<value>Save</value>
-		<hint>used in many places</hint>
-	</string>
 
 	<string>
 		<key>PaperMargin</key>
 		<value>Margin at paper edge (%)</value>
-		<hint>conversion option to adjust margin percentage at paper edge.</hint>
+		<hint>conversion options</hint>
 	</string>
 	<string>
 		<key>Converting</key>
@@ -192,7 +192,7 @@
 	<string>
 		<key>ConversionStyle</key>
 		<value>Conversion style</value>
-		<hint>conversion option to choose a filter aka conversion style.</hint>
+		<hint>conversion options</hint>
 	</string>
 
 	<string>
@@ -280,6 +280,11 @@
 	</string>
 
 	<string>
+		<key>MenuResetMachinePreferences</key>
+		<value>Reset Preferences</value>
+		<hint>Preferences menu</hint>
+	</string>
+	<string>
 		<key>MenuLanguageTitle</key>
 		<value>Language</value>
 		<hint>menu or dialog title</hint>
@@ -325,43 +330,43 @@
 
 	<string>
 		<key>SetHome</key>
-		<value>SET HOME</value>
+		<value>Set home</value>
 		<hint>manual driving dialog</hint>
 	</string>
 	<string>
 		<key>GoHome</key>
-		<value>GO HOME</value>
+		<value>Go home</value>
 		<hint>manual driving dialog</hint>
 	</string>
 
 	<string>
 		<key>Top</key>
-		<value>TOP</value>
+		<value>Top</value>
 		<hint>manual driving dialog</hint>
 	</string>
 	<string>
 		<key>Bottom</key>
-		<value>BOTTOM</value>
+		<value>Bottom</value>
 		<hint>manual driving dialog</hint>
 	</string>
 	<string>
 		<key>Left</key>
-		<value>LEFT</value>
+		<value>Left</value>
 		<hint>manual driving dialog</hint>
 	</string>
 	<string>
 		<key>Right</key>
-		<value>RIGHT</value>
+		<value>Right</value>
 		<hint>manual driving dialog</hint>
 	</string>
 	<string>
 		<key>PenUp</key>
-		<value>PEN UP</value>
+		<value>Pen up</value>
 		<hint>manual driving dialog</hint>
 	</string>
 	<string>
 		<key>PenDown</key>
-		<value>PEN DOWN</value>
+		<value>Pen down</value>
 		<hint>manual driving dialog</hint>
 	</string>
 
@@ -439,6 +444,11 @@
 		<hint>menu or dialog title</hint>
 	</string>
 	<string>
+		<key>MenuLog</key>
+		<value>Log</value>
+		<hint>menu or dialog title</hint>
+	</string>
+	<string>
 		<key>MenuUpdate</key>
 		<value>Check for updates</value>
 		<hint>menu or dialog title</hint>
@@ -483,12 +493,12 @@
 	</string>
 	<string>
 		<key>MenuSettingsMachine</key>
-		<value>Adjust machine &amp; paper size</value>
+		<value>Machine &amp; paper size</value>
 		<hint>menu or dialog title</hint>
 	</string>
 	<string>
 		<key>MenuAdjustPulleys</key>
-		<value>Adjust pulley size</value>
+		<value>Pulley size</value>
 		<hint>menu or dialog title</hint>
 	</string>
 	<string>
@@ -504,23 +514,23 @@
 	</string>
 	<string>
 		<key>MenuAdjustTool</key>
-		<value>Adjust active tool</value>
+		<value>Tools</value>
 		<hint>menu or dialog title</hint>
 	</string>
 
 	<string>
 		<key>MenuGCODE</key>
-		<value>GCODE</value>
+		<value>Convert</value>
 		<hint>menu or dialog title</hint>
 	</string>
 	<string>
 		<key>MenuHilbertCurve</key>
-		<value>Hilbert Curve</value>
+		<value>Hilbert curve fractal</value>
 		<hint>menu or dialog title</hint>
 	</string>
 	<string>
 		<key>MenuTextToGCODE</key>
-		<value>Text to GCODE</value>
+		<value>Your message here</value>
 		<hint>menu or dialog title</hint>
 	</string>
 	<string>
@@ -535,7 +545,7 @@
 	</string>
 	<string>
 		<key>MenuSaveGCODEAs</key>
-		<value>Save GCODE as...</value>
+		<value>Save results as...</value>
 		<hint>menu or dialog title</hint>
 	</string>
 
@@ -573,12 +583,12 @@
 	<string>
 		<key>mmNotice</key>
 		<value>All values in mm.</value>
-		<hint>Adjust machine size</hint>
+		<hint>Machine size</hint>
 	</string>
 
 	<string>
 		<key>penToolAdjust</key>
-		<value>Adjust Pen</value>
+		<value>Pen</value>
 		<hint>Adjust pen tool</hint>
 	</string>
 	<string>
@@ -615,38 +625,38 @@
 
 	<string>
 		<key>spraypaintToolTest</key>
-		<value>Adjust Spraypaint</value>
-		<hint>Adjust Spraypaint tool</hint>
+		<value>Spraypaint</value>
+		<hint>Spraypaint tool</hint>
 	</string>
 	<string>
 		<key>spraypaintToolDiameter</key>
 		<value>Dot size</value>
-		<hint>Adjust spraypaint tool</hint>
+		<hint>Spraypaint tool</hint>
 	</string>
 	<string>
 		<key>spraypaintToolMaxFeedRate</key>
 		<value>Max feed rate</value>
-		<hint>Adjust spraypaint tool</hint>
+		<hint>Spraypaint tool</hint>
 	</string>
 	<string>
 		<key>spraypaintToolUp</key>
 		<value>Off</value>
-		<hint>Adjust spraypaint tool</hint>
+		<hint>Spraypaint tool</hint>
 	</string>
 	<string>
 		<key>spraypaintToolDown</key>
 		<value>On</value>
-		<hint>Adjust spraypaint tool</hint>
+		<hint>Spraypaint tool</hint>
 	</string>
 	<string>
 		<key>spraypaintToolLiftSpeed</key>
 		<value>On/off speed</value>
-		<hint>Adjust spraypaint tool</hint>
+		<hint>Spraypaint tool</hint>
 	</string>
 	<string>
 		<key>spraypaintToolTest</key>
 		<value>Make a dot</value>
-		<hint>Adjust spraypaint tool</hint>
+		<hint>Spraypaint tool</hint>
 	</string>
 
 	<string>
@@ -737,19 +747,19 @@
 		<value>Share it on twitter to @MarginallyC to see what others have created.</value>
 		<hint>Your drawing is finished.  Share it</hint>
 	</string>
-	
+
 	<string>
 		<key>StatusSoFar</key>
 		<value>Time running: </value>
 		<hint>time machine has been drawing</hint>
 	</string>
-	
+
 	<string>
 		<key>StatusRemaining</key>
 		<value>Estimated time left: </value>
 		<hint>time machine will be drawing</hint>
 	</string>
-	
+
 	<string>
 		<key>DisengageMotors</key>
 		<value>Disengage</value>

@@ -1,10 +1,12 @@
 ##### Makelangelo #####
 
-http://www.makelangelo.com/ 
+http://www.makelangelo.com/
 
 A mural drawing robot and a gentle introduction to 3D printing
 
 Makelangelo is a polargraph mural drawing robot.  It is intended to teach students about programming, physics, trigonometry, and electronics in a fun, goal-oriented way.  Makelangelo is scalable: our test models have ranged from 30cm^2 to 300cm^2.
+
+This project specifically deals with the GUI: the computer program that makes running the robot friendly and easy.  It pairs really well with Makelangelo-firmware, the code in the brain of the robot that receives instructions and moves the motors.
 
 ## Instructions ##
 
@@ -19,8 +21,8 @@ https://github.com/MarginallyClever/Makelangelo/wiki/Home/
 
 ## Get help ##
 
-Please visit the forums 
-https://marginallyclever.com/forum 
+Please visit the forums
+https://marginallyclever.com/forum
 
 ## Special thanks ##
 
