@@ -3,6 +3,7 @@ package com.marginallyclever.makelangelo;
 import java.awt.Component;
 import java.awt.Desktop;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 
 import javax.swing.ImageIcon;
@@ -44,18 +45,9 @@ public class DialogAbout {
 	 *
 	 * @return An HTML string used for the About Message Dialog.
 	 */
-	private String getAboutHtmlFromMultilingualString(Translator translator, String version) {
-		final String aboutHtmlBeforeVersionNumber = Translator.get("AboutHTMLBeforeVersionNumber");
-		final String aboutHmlAfterVersionNumber = Translator.get("AboutHTMLAfterVersionNumber");
-		final int aboutHTMLBeforeVersionNumberLength = aboutHtmlBeforeVersionNumber.length();
-		final int versionNumberStringLength = version.length();
-		final int aboutHtmlAfterVersionNumberLength = aboutHmlAfterVersionNumber.length();
-		final int aboutHtmlStringBuilderCapacity = aboutHTMLBeforeVersionNumberLength + versionNumberStringLength + aboutHtmlAfterVersionNumberLength;
-		final StringBuilder aboutHtmlStringBuilder = new StringBuilder(aboutHtmlStringBuilderCapacity);
-		aboutHtmlStringBuilder.append(aboutHtmlBeforeVersionNumber);
-		aboutHtmlStringBuilder.append(version);
-		aboutHtmlStringBuilder.append(aboutHmlAfterVersionNumber);
-		return aboutHtmlStringBuilder.toString();
+	private String getAboutHtmlFromMultilingualString() {
+		String aboutHTML = Translator.get("AboutHTML");
+		return aboutHTML.replace("%VERSION%",Makelangelo.VERSION);
 	}
 
 	/**
@@ -73,7 +65,8 @@ public class DialogAbout {
 				if (hyperlinkEvent.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
 					if (Desktop.isDesktopSupported()) {
 						try {
-							Desktop.getDesktop().browse(hyperlinkEvent.getURL().toURI());
+							URI u = hyperlinkEvent.getURL().toURI();
+							Desktop.getDesktop().browse(u);
 						} catch (IOException | URISyntaxException exception) {
 							// Auto-generated catch block
 							exception.printStackTrace();
@@ -91,8 +84,8 @@ public class DialogAbout {
 	/**
 	 * Display the about dialog.
 	 */
-	public void display(Translator translator,String version,Component parent) {
-		final String aboutHtml = getAboutHtmlFromMultilingualString(translator,version);
+	public void display(Component parent) {
+		final String aboutHtml = getAboutHtmlFromMultilingualString();
 		final JTextComponent bottomText = createHyperlinkListenableJEditorPane(aboutHtml);
 		ImageIcon icon = getImageIcon("logo.png");
 		final String menuAboutValue = Translator.get("MenuAbout");

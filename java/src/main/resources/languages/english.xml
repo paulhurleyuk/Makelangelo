@@ -29,7 +29,12 @@
 		<hint>DXF load option</hint>
 	</string>
 	
-	
+	<string>
+		<key>TempFolderLabel</key>
+		<value>Temporary files location:</value>
+		<hint>Where to save temporary files used in gcode management.</hint>
+	</string>
+		
 	<string>
 		<key>Cancel</key>
 		<value>Cancel</value>
@@ -171,9 +176,15 @@
 	</string>
 
 	<string>
-		<key>FileNotOpened</key>
-		<value>File could not be opened: </value>
-		<hint>status message. keep the space at the end.</hint>
+		<key>LoadError</key>
+		<value>File could not be loaded:</value>
+		<hint>status message.</hint>
+	</string>
+
+	<string>
+		<key>SaveError</key>
+		<value>File could not be saved:</value>
+		<hint>status message.</hint>
 	</string>
 
 	<string>
@@ -195,7 +206,7 @@
 
 	<string>
 		<key>PaperMargin</key>
-		<value>Margin at paper edge (%)</value>
+		<value>Margin (%)</value>
 		<hint>conversion options</hint>
 	</string>
 	<string>
@@ -263,6 +274,17 @@
 	</string>
 
 	<string>
+		<key>pen up color</key>
+		<value>Up color</value>
+		<hint>Pen settings</hint>
+	</string>
+	<string>
+		<key>pen down color</key>
+		<value>Down color</value>
+		<hint>Pen settings</hint>
+	</string>
+
+	<string>
 		<key>MenuDriveControls</key>
 		<value>Manual Driving</value>
 		<hint>context sensitive menu</hint>
@@ -278,6 +300,11 @@
 		<hint>context sensitive menu</hint>
 	</string>
 
+	<string>
+		<key>MenuFileTitle</key>
+		<value>File</value>
+		<hint>menu or dialog title</hint>
+	</string>
 	
 	<string>
 		<key>MenuSoundsTitle</key>
@@ -333,7 +360,7 @@
 
 	<string>
 		<key>MenuResetMachinePreferences</key>
-		<value>Reset Preferences</value>
+		<value>Reset</value>
 		<hint>Preferences menu</hint>
 	</string>
 	<string>
@@ -388,6 +415,16 @@
 	<string>
 		<key>GoHome</key>
 		<value>Go home</value>
+		<hint>manual driving dialog</hint>
+	</string>
+	<string>
+		<key>FindHome</key>
+		<value>Find home</value>
+		<hint>manual driving dialog</hint>
+	</string>
+	<string>
+		<key>GoPaperBorder</key>
+		<value>Border</value>
 		<hint>manual driving dialog</hint>
 	</string>
 
@@ -676,7 +713,7 @@ to check yourself.</value>
 	</string>
 	<string>
 		<key>penToolMaxFeedRate</key>
-		<value>Max feed rate</value>
+		<value>Max speed</value>
 		<hint>Adjust pen tool</hint>
 	</string>
 	<string>
@@ -713,7 +750,7 @@ to check yourself.</value>
 	</string>
 	<string>
 		<key>spraypaintToolMaxFeedRate</key>
-		<value>Max feed rate</value>
+		<value>max speed</value>
 		<hint>Spraypaint tool</hint>
 	</string>
 	<string>
@@ -864,32 +901,21 @@ to check yourself.</value>
 		<hint>Manual driving dialog</hint>
 	</string>
 	
-
-	<!-- Because the version string is declared in Java, AboutHTMLBeforeVersionNumber 
-		and AboutHTMLAfterVersionNumber are used to dynamically build the HTML for 
-		the about message dialog using the version string. This is why there is not
-		one big CDATA html blob. -->
 	<string>
-		<key>AboutHTMLBeforeVersionNumber</key>
+		<key>AboutHTML</key>
 		<value><![CDATA[
     <html>
       <body>
-        <h1>Makelangelo ]]>
-		</value>
-		<hint>HTML for About Dialog</hint>
-	</string>
-
-	<string>
-		<key>AboutHTMLAfterVersionNumber</key>
-		<value><![CDATA[
-	</h1>
+        <h1>Makelangelo %VERSION%</h1>
       <h3>
         <a href='http://www.makelangelo.com/'>http://www.makelangelo.com/</a>
       </h3>
-        <p>Created by <a href="mailto:dan@marginallyclever.com">Dan Royer</a>.<br>
-        Additional contributions by Joseph Cottam, <a href='https://github.com/virtuoushub'>Peter Colapietro<a/>, and Mark Raynsford.</p>
         <p>To get the latest version please visit<br>
           <a href='https://www.marginallyclever.com/product/makelangelo-software/'>https://www.marginallyclever.com/product/makelangelo-software/</a></p>
+        <p>Created by <a href="mailto:dan@marginallyclever.com">Dan Royer</a>.</p>
+        <p>Additional software and hardware contributions by<br>
+        Joseph Cottam, <a href='https://github.com/virtuoushub'>Peter Colapietro<a/>,<br>
+        Mark Raynsford, and <a href='https://ca.linkedin.com/in/kington-chu-219923123'>Kington Chu</a>.</p>
       </body>
     </html>
     ]]>
@@ -966,6 +992,12 @@ to check yourself.</value>
 	<string>
 		<key>KochTreeName</key>
 		<value>Koch Curve Fractal</value>
+		<hint></hint>
+	</string>
+	
+	<string>
+		<key>FibonacciSpiralName</key>
+		<value>Fibonacci Spiral Fractal</value>
 		<hint></hint>
 	</string>
 
@@ -1049,11 +1081,17 @@ to check yourself.</value>
 		<value>Firmware update</value>
 		<hint>Software is too new for firmware</hint>
 	</string>
+
+	<string>
+		<key>HardwareVersion</key>
+		<value>Model: </value>
+		<hint>What is the hardware model of this robot?</hint>
+	</string>
 	
 	<string>
 		<key>firmwareVersionBadMessage</key>
-		<value><![CDATA[<html><body>The firmware (code in the brain of your robot) is out of date.  A new version of this firmware is available.<br/>Please visit 
-		<a href="https://www.marginallyclever.com/product/makelangelo-firmware/">https://www.marginallyclever.com/product/makelangelo-firmware/</a> to get the new version.</html></body>]]></value>
+		<value><![CDATA[<html><body>The firmware (code in the brain of your robot) is not the version I expect. I found <strong>v%VERSION%</strong>.<br/>Please visit <a href="https://www.marginallyclever.com/product/makelangelo-firmware/">https://www.marginallyclever.com/product/makelangelo-firmware/</a><br>
+		   for the latest firmware.<br>Please visit <a href="https://www.marginallyclever.com/product/makelangelo-software/">https://www.marginallyclever.com/product/makelangelo-software/</a> for the latest software.</html></body>]]></value>
 		<hint>Software is too new for firmware</hint>
 	</string>
 		
